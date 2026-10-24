@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { deleteFiles } from "@/lib/storage";
-import { RETENTION_DAYS } from "@/lib/rolls";
+import { hashToken, safeEqualHex } from "@/lib/ids";
+import { pruneRateLimits } from "@/lib/guard";
+import { RETENTION_DAYS, UNPAID_RETENTION_DAYS } from "@/lib/rolls";
+import { payConfig } from "@/lib/payments";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -11,21 +14,25 @@ const PAUSE_MS = 7000; // stays under the Hobby limit of 900 blob operations per
 const BUDGET_MS = 240_000;
 
 /**
- * Daily job (vercel.json): deletes rolls that finished more than RETENTION_DAYS
- * (+1 day for the lab delay) ago, and rolls abandoned unfinished for 90 days.
+ * Daily job (vercel.json): deletes paid rolls RETENTION_DAYS and unpaid rolls
+ * UNPAID_RETENTION_DAYS after they finished (+1 day for the lab delay), and
+ * personal rolls abandoned unfinished for 90 days.
  */
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;
-  if (!secret || req.headers.get("authorization") !== `Bearer ${secret}`) {
+  const given = hashToken(req.headers.get("authorization") || "");
+  if (!secret || !safeEqualHex(given, hashToken(`Bearer ${secret}`))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   const started = Date.now();
+  await pruneRateLimits().catch(() => {});
   const expired = await query<{ id: string }>(
     `select id from rolls
-      where coalesce(finished_at, ends_at) < now() - ($1 || ' days')::interval
+      where coalesce(finished_at, ends_at) < now() - ((case when paid then $1 else $2 end) || ' days')::interval
          or (finished_at is null and ends_at is null and created_at < now() - interval '90 days')
       order by created_at asc`,
-    [String(RETENTION_DAYS + 1)]
+    // +1 day covers the lab delay; without payments everything is treated as paid
+    [String(RETENTION_DAYS + 1), String((payConfig().enabled ? UNPAID_RETENTION_DAYS : RETENTION_DAYS) + 1)]
   );
   let photos = 0;
   let rolls = 0;

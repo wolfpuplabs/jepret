@@ -76,8 +76,9 @@ export function rollState(r: RollData, now = Date.now()) {
   };
 }
 
+/** Exposures used (reserved) on a roll — the counter the upload route enforces. */
 export async function shotCount(rollId: string) {
-  const r = await one<{ n: number }>(`select count(*)::int as n from photos where roll_id = $1`, [rollId]);
+  const r = await one<{ n: number }>(`select coalesce(shots_used, 0)::int as n from rolls where id = $1`, [rollId]);
   return Number(r?.n ?? 0);
 }
 
@@ -120,7 +121,10 @@ export function makeSlug(name: string) {
   return `${base || "roll"}-${randomId(4)}`;
 }
 
-/** Photos are kept this many days after the roll develops. */
+/** Photos are kept this many days after the roll develops (paid rolls). */
 export const RETENTION_DAYS = 30;
-export const expiresAt = (developAt: string) =>
-  new Date(new Date(developAt).getTime() + RETENTION_DAYS * 86400_000).toISOString();
+/** Rolls nobody paid for are cleared sooner: storage is the main variable cost. */
+export const UNPAID_RETENTION_DAYS = 7;
+export const retentionDays = (paid: boolean) => (paid ? RETENTION_DAYS : UNPAID_RETENTION_DAYS);
+export const expiresAt = (developAt: string, paid = true) =>
+  new Date(new Date(developAt).getTime() + retentionDays(paid) * 86400_000).toISOString();

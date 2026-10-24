@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { limitByClient, track } from "@/lib/guard";
 import { query } from "@/lib/db";
 import { hashToken, randomId, randomToken } from "@/lib/ids";
 import { getRollBySlug, rollState, shotCount } from "@/lib/rolls";
@@ -17,8 +18,18 @@ export async function POST(req: Request, ctx: { params: Promise<{ slug: string }
   const { name } = await req.json().catch(() => ({ name: "" }));
   const clean = typeof name === "string" ? name.trim().slice(0, 40) : "";
   if (!clean) return NextResponse.json({ error: "name" }, { status: 400 });
+  const limited = await limitByClient(req, "join", 120, 600, roll.id);
+  if (limited) return limited;
   const token = randomToken();
-  await query(`insert into members (id, roll_id, name, token_hash) values ($1,$2,$3,$4)`, [randomId(12), roll.id, clean, hashToken(token)]);
+  // nobody needs more guests than twice the exposures; stops bots padding a roll
+  const inserted = await query(
+    `insert into members (id, roll_id, name, token_hash)
+     select $1, $2, $3, $4 where (select count(*) from members where roll_id = $2) < $5
+     returning id`,
+    [randomId(12), roll.id, clean, hashToken(token), Math.min(roll.exposures * 2, 1000)]
+  );
+  if (!inserted.length) return NextResponse.json({ error: "full" }, { status: 403 });
+  await track("joined", roll.id);
   await setMemberCookie(roll.id, token);
   return NextResponse.json({ ok: true });
 }

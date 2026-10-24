@@ -58,6 +58,27 @@ const SCHEMA = [
     paid_at timestamptz
   )`,
   `create index if not exists payments_roll_idx on payments(roll_id, status)`,
+  `create table if not exists rate_limits (
+    k text not null,
+    bucket bigint not null,
+    n integer not null default 1,
+    expires_at timestamptz not null,
+    primary key (k, bucket)
+  )`,
+  `create table if not exists metrics (
+    id bigserial primary key,
+    name text not null,
+    ref text,
+    amount integer not null default 0,
+    bytes bigint not null default 0,
+    at timestamptz not null default now()
+  )`,
+  `create index if not exists metrics_name_at_idx on metrics(name, at)`,
+  // reserved exposures per roll: an atomic counter keeps parallel uploads within the roll
+  `alter table rolls add column if not exists shots_used integer`,
+  `update rolls r set shots_used = (select count(*) from photos p where p.roll_id = r.id) where shots_used is null`,
+  `alter table rolls alter column shots_used set default 0`,
+  `create index if not exists rolls_created_idx on rolls(created_at)`,
 ];
 
 let runnerPromise: Promise<Runner> | null = null;

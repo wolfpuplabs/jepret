@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { limitByClient, track } from "@/lib/guard";
 import { query } from "@/lib/db";
 import { hashToken, randomId, randomToken } from "@/lib/ids";
 import { DEVELOP_MODES, getPack, type DevelopMode } from "@/lib/packages";
@@ -12,6 +13,9 @@ const str = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice
 
 /** Loads a new roll. The creator becomes its owner (cookie + private link). */
 export async function POST(req: Request) {
+  // loading a roll is free; storage is only paid back at download, so cap free loads per address
+  const limited = (await limitByClient(req, "create", 5, 3600)) || (await limitByClient(req, "create-day", 15, 86400));
+  if (limited) return limited;
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "bad_request" }, { status: 400 });
   const pack = getPack(String(body.pack || ""));
@@ -42,6 +46,7 @@ export async function POST(req: Request) {
     ]
   );
   await query(`insert into members (id, roll_id, name, is_owner) values ($1,$2,$3,true)`, [randomId(12), id, ownerName || (pack.mode === "event" ? "Host" : "Me")]);
+  await track("created", id, pack.price);
   await setOwnerCookie(id, token);
   return NextResponse.json({ slug, ownerToken: token, mode: pack.mode });
 }

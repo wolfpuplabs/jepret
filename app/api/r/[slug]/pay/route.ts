@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { limitByClient } from "@/lib/guard";
 import { getRollBySlug, rollState } from "@/lib/rolls";
 import { canView } from "@/lib/auth";
 import { createPayment, getPayment, payConfig, refreshFromMidtrans } from "@/lib/payments";
@@ -8,7 +9,9 @@ export const runtime = "nodejs";
 type Ctx = { params: Promise<{ slug: string }> };
 
 /** Starts a Snap payment for the whole roll. */
-export async function POST(_req: Request, ctx: Ctx) {
+export async function POST(req: Request, ctx: Ctx) {
+  const limited = await limitByClient(req, "pay", 15, 600);
+  if (limited) return limited;
   const roll = await getRollBySlug((await ctx.params).slug);
   if (!roll) return NextResponse.json({ error: "not_found" }, { status: 404 });
   if (!(await canView(roll))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
@@ -26,6 +29,8 @@ export async function POST(_req: Request, ctx: Ctx) {
 export async function GET(req: Request, ctx: Ctx) {
   const roll = await getRollBySlug((await ctx.params).slug);
   if (!roll) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  const limited = await limitByClient(req, "pay-poll", 200, 600);
+  if (limited) return limited;
   const order = new URL(req.url).searchParams.get("order") || "";
   let pay = await getPayment(order, roll.id);
   if (!pay) return NextResponse.json({ error: "not_found" }, { status: 404 });

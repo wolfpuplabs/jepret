@@ -31,3 +31,12 @@ Next.js (App Router) · Neon Postgres · Vercel Blob · Midtrans Snap. Lihat `.e
 Pengembangan lokal tanpa Neon/Blob: `LOCAL_DEV=1 npm run dev`.
 
 Foto contoh di beranda dari Unsplash (lisensi Unsplash) — lihat `public/photos/CREDITS.md`.
+
+## Guardrails & ROI
+
+- **Security headers** for every response (`next.config.mjs`): nosniff, frame-ancestors none, HSTS, strict referrer, camera only on our own origin; secret `/k/…` and `/ops` links send no referrer.
+- **Rate limits** (`lib/guard.ts`, table `rate_limits`, hashed addresses): create, join, upload, pay, payment polling, downloads.
+- **Uploads** must be real JPEGs (magic bytes) and the exposure is reserved with an atomic counter before anything is stored, so parallel uploads can never go past the roll.
+- **Metrics log** (table `metrics`): created, joined, photo (bytes), paywall, paid, refunded, download — kept even after albums are deleted.
+- **`/ops?key=OPS_KEY`**: 7/30/90-day funnel, revenue, estimated costs, ROI and the GO / HOLD / NO-GO signal used by the decision document.
+- **Retention**: unpaid rolls are removed 7 days after developing, paid rolls after 30.

@@ -1,6 +1,7 @@
 import "server-only";
 import { createHash } from "node:crypto";
 import { one, query } from "./db";
+import { track } from "./guard";
 import { randomId } from "./ids";
 import type { RollData } from "./rolls";
 
@@ -113,10 +114,13 @@ export async function applyStatus(n: MidtransStatus) {
   if (status === "paid" && Math.round(Number(n.gross_amount)) !== Number(pay.amount)) status = "failed";
   if (pay.status === "paid" && status !== "refunded") return { ...pay, status: "paid" };
 
-  await query(
-    `update payments set status = $2, payment_type = coalesce($3, payment_type), paid_at = case when $2 = 'paid' then now() else paid_at end where order_id = $1`,
+  // only the request that actually changes the status records the metric (webhook and polling can race)
+  const changed = await query(
+    `update payments set status = $2, payment_type = coalesce($3, payment_type), paid_at = case when $2 = 'paid' then now() else paid_at end
+      where order_id = $1 and status is distinct from $2 returning order_id`,
     [pay.order_id, status, n.payment_type ?? null]
   );
+  if (changed.length && (status === "paid" || status === "refunded")) await track(status, pay.roll_id, Number(pay.amount));
   if (status === "paid") await query(`update rolls set paid = true where id = $1`, [pay.roll_id]);
   if (status === "refunded") {
     const other = await one(`select 1 as x from payments where roll_id = $1 and status = 'paid' and order_id <> $2`, [pay.roll_id, pay.order_id]);

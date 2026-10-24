@@ -46,7 +46,7 @@ export default async function AlbumPage({ params, searchParams }: { params: Prom
           photos={photos}
           unlocked={unlocked}
           pay={publicPayConfig()}
-          expires={expiresAt(state.developAt!)}
+          expires={expiresAt(state.developAt!, unlocked)}
           initialOrder={order && /^[A-Z0-9-]{6,60}$/.test(order) ? order : null}
         />
       </div>
