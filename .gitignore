@@ -1,0 +1,15 @@
+node_modules
+.next
+out
+.env
+.env.local
+.env*.local
+.vercel
+.local-data
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store
+
+# copied from node_modules at build time
+/public/mediapipe/wasm
+AGENTS.md

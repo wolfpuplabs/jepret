@@ -1,0 +1,28 @@
+name: mediapipe-models
+on:
+  push:
+    branches: [main]
+    paths: [".github/mediapipe-models.txt"]
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download models
+        run: |
+          mkdir -p public/mediapipe/models
+          grep -v '^#' .github/mediapipe-models.txt | while read -r name url; do
+            [ -z "$name" ] && continue
+            curl -sfL -o "public/mediapipe/models/$name" "$url"
+            ls -la "public/mediapipe/models/$name"
+          done
+      - name: Commit
+        run: |
+          git config user.name "wolfpuplabs"
+          git config user.email "witakarwila28@gmail.com"
+          git add public/mediapipe/models
+          git diff --cached --quiet && exit 0
+          git commit -m "Add MediaPipe tracking models (Apache-2.0)"
+          git push
