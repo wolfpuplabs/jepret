@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const roll = await getRollBySlug((await params).slug);
-  if (!roll) return { title: "jepret", robots: { index: false } };
+  if (!roll) return { title: { absolute: "jepret by wolfpuplabs" }, robots: { index: false } };
   const description =
     roll.mode === "event"
       ? `Join ${roll.ownerName ? `${roll.ownerName}'s` : "this"} roll and shoot from your phone — no app needed.`
