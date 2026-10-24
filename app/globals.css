@@ -1057,3 +1057,38 @@ textarea { resize: vertical; min-height: 84px; }
 .jp-qr { justify-self: start; padding: 10px; border-radius: 16px; background: #fff; line-height: 0; }
 .jp-qr img { width: 160px; height: 160px; }
 .eh-primary:disabled { opacity: .5; cursor: default; }
+
+/* story: jepret screens */
+.story-progress button span::after { background: var(--accent); }
+.stage-inner::before { background: radial-gradient(circle, rgba(255,197,61,.22), transparent 70%); }
+.sj-pick { background: radial-gradient(120% 80% at 20% 0%, #2a2116, #0e0c0a 70%); padding: 56px 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+.sj-title { font-family: var(--display); font-weight: 800; font-size: 22px; letter-spacing: -0.04em; }
+.sj-boxes { display: grid; gap: 8px; }
+.sj-box { position: relative; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: #f6efe2; color: #1a1408; overflow: hidden; }
+.sj-box i { position: absolute; left: 0; top: 0; bottom: 0; width: 8px; background: var(--fb); }
+.sj-box b { font-family: var(--display); font-weight: 800; font-size: 28px; letter-spacing: -0.05em; line-height: 1; margin-left: 4px; }
+.sj-box b small { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; margin-left: 3px; opacity: .6; }
+.sj-box span { margin-left: auto; font-weight: 800; font-size: 13px; }
+.sj-box.sel { outline: 2.5px solid var(--accent); outline-offset: 2px; transform: scale(1.03); }
+.sj-btn { margin-top: auto; text-align: center; background: var(--accent); color: var(--accent-ink); border-radius: 999px; padding: 10px; font-weight: 700; font-size: 13px; }
+.sj-hub { background: #0e0c0a; display: flex; flex-direction: column; }
+.sj-cover { height: 46%; position: relative; }
+.sj-cover::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,.3), transparent 30%, rgba(14,12,10,.98)); }
+.sj-hub-body { padding: 0 14px 14px; margin-top: -40px; position: relative; display: grid; gap: 6px; justify-items: center; text-align: center; }
+.sj-hub-title { font-family: var(--serif); font-weight: 400; font-size: 26px; line-height: 1; }
+.sj-hub-meta { font-family: var(--mono); font-size: 9px; letter-spacing: .14em; color: var(--ink-3); }
+.sj-open { margin-top: 10px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; background: var(--accent); color: var(--accent-ink); border-radius: 12px; padding: 10px; font-weight: 700; font-size: 13px; }
+.sj-open small { font-weight: 600; opacity: .6; font-size: 11px; }
+.sj-strip { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; padding: 8px; border-radius: 10px; background: #120d07; }
+.sj-strip i { width: 9px; height: 13px; border-radius: 2px; background: rgba(255,236,210,.12); }
+.sj-lab { background: radial-gradient(120% 80% at 50% 0%, #3a120a, #0e0c0a 70%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 20px; }
+.sj-lab .dev-roll { background: conic-gradient(#ff5a36, #5a1a10, #ff5a36, #5a1a10, #ff5a36); }
+.sj-lab .dev-roll::before { background: #ff8a3d; }
+.sj-lab .dev-label { color: #ff8a6a; }
+.sj-lab .dev-tiles i { border-color: rgba(255,90,54,.25); background: rgba(255,90,54,.08); }
+.sj-safelight { position: absolute; top: -30px; left: 50%; width: 200px; height: 110px; transform: translateX(-50%); background: radial-gradient(ellipse, rgba(255,90,54,.6), transparent 70%); filter: blur(10px); animation: safelight 3s ease-in-out infinite; }
+.sj-pay { position: absolute; left: 10px; right: 10px; bottom: 12px; text-align: center; border-radius: 999px; padding: 10px; font-weight: 700; font-size: 12.5px; background: rgba(255,236,210,.12); border: 1px solid rgba(255,236,210,.2); color: var(--ink); transition: background .4s, color .4s; }
+.sj-pay.paid { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.vf-top .vf-count { background: var(--accent); color: var(--accent-ink); }
+.join-chip i { background: var(--accent); color: var(--accent-ink); }
+.table-card { background: #f6efe2; color: #1a1408; }

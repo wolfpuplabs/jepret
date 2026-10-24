@@ -3,8 +3,7 @@ import { getT } from "@/lib/i18n-server";
 import { packages } from "@/lib/packages";
 import FilmBox from "@/components/FilmBox";
 import { Print, Scene } from "@/components/Illustrations";
-
-const STEP_PHOTOS = ["cheers", "dip", "confetti", "cake-cut"] as const;
+import Story from "@/components/Story";
 
 export default async function Home() {
   const { t, lang } = await getT();
@@ -87,21 +86,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="section" id="cara">
-        <div className="wrap">
-          <div className="section-head"><h2>{t.home.howTitle}</h2></div>
-          <ol className="jp-steps">
-            {t.home.steps.map((s, i) => (
-              <li key={s.t} className="card">
-                <div className="jp-step-img"><Scene kind={STEP_PHOTOS[i]} lite className={i === 2 ? "is-dev" : ""} /></div>
-                <span className="jp-step-n">{String(i + 1).padStart(2, "0")}</span>
-                <h3>{s.t}</h3>
-                <p className="muted">{s.d}</p>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
+      <Story />
 
       <section className="section">
         <div className="wrap narrow">
