@@ -18,7 +18,10 @@ export function payConfig() {
   const snapHost = isProduction ? "https://app.midtrans.com" : "https://app.sandbox.midtrans.com";
   const apiHost = isProduction ? "https://api.midtrans.com" : "https://api.sandbox.midtrans.com";
   return {
-    enabled: !!serverKey && !!clientKey,
+    // Fail closed: in production a missing key keeps the paywall up (payments then
+    // error out) instead of silently making every download free.
+    enabled: (!!serverKey && !!clientKey) || isProduction,
+    misconfigured: isProduction && (!serverKey || !clientKey),
     serverKey,
     clientKey,
     isProduction,
@@ -40,6 +43,10 @@ export const canDownload = (roll: RollData) => !payConfig().enabled || roll.paid
 const auth = (serverKey: string) => "Basic " + Buffer.from(`${serverKey}:`).toString("base64");
 
 export async function createPayment(roll: RollData, origin: string, returnPath: string) {
+  if (payConfig().misconfigured) {
+    console.error("payments: MIDTRANS_IS_PRODUCTION=true but MIDTRANS_SERVER_KEY / MIDTRANS_CLIENT_KEY is missing");
+    throw new Error("payments_misconfigured");
+  }
   const c = payConfig();
   const amount = roll.price;
   const orderId = `JPR-${roll.id.slice(0, 8)}-${randomId(10)}`.toUpperCase();
